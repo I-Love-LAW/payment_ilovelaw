@@ -1,10 +1,10 @@
-from django.core import serializers
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import PembayaranSerializer, DetailPembayaranSerializer
 from .models import Pembayaran
+from .validations import cek_login
 
 # Create your views here.
 class PembayaranView(APIView):
@@ -12,8 +12,13 @@ class PembayaranView(APIView):
     def post(self, request):
         serializer = PembayaranSerializer(data=request.data)
         if serializer.is_valid():
+            token = request.headers.get('Authorization').split(' ')[1]
+            username = serializer.validated_data['username']
+            
+            if not cek_login(token, username):
+                return Response({"message": "Bad Credentials: Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
 
-            pembayaran = Pembayaran.objects.filter(username=serializer.validated_data['username']).first()
+            pembayaran = Pembayaran.objects.filter(username=username).first()
             if pembayaran is not None:
                 return Response({"message": "You already make payment"}, status=status.HTTP_400_BAD_REQUEST)
             
