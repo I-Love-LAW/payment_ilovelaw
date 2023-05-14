@@ -12,10 +12,10 @@ class PembayaranView(APIView):
     def post(self, request):
         serializer = PembayaranSerializer(data=request.data)
         if serializer.is_valid():
-            token = request.headers.get('Authorization').split(' ')[1]
+            auth_header = request.headers.get('Authorization')
             username = serializer.validated_data['username']
             
-            if not cek_login(token, username):
+            if not cek_login(auth_header, username):
                 return Response({"message": "Bad Credentials: Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
 
             pembayaran = Pembayaran.objects.filter(username=username).first()
